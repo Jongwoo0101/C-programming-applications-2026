@@ -10,12 +10,257 @@
     * `힙(Heap) 영역`: 동적 메모리 할당 함수에 의해 실행 시 크기가 결정되어 할당되는 영역입니다.
     * `스택(Stack) 영역`: 매개 변수, 지역 변수, 리턴 값 등 함수 호출에 필요한 데이터가 일시적으로 보관됩니다.
 
+---
+
 ## 2. 동적 메모리 관리 함수 (`<stdlib.h>`)
-동적 메모리는 주로 힙(Heap) 영역을 사용하며, 다음 함수들을 통해 관리합니다:
-* **`malloc(size)`**: 지정한 `size` 바이트 크기만큼의 메모리를 할당하고 그 시작 주소를 `void *` 형태로 반환합니다.
-* **`calloc(num, size)`**: `size` 크기의 데이터 `num`개를 저장할 수 있는 배열 형태의 메모리를 할당하며, **모든 원소의 값을 0으로 초기화**합니다.
-* **`realloc(pointer, size)`**: `malloc`이나 `calloc`으로 이미 할당된 메모리(`pointer`)의 크기를 새로운 크기(`size`)로 재할당합니다. 가능한 한 기존 데이터의 손실 없이 공간을 조정할 때 유용합니다.
-* **`free(ptr)`**: 동적으로 할당받은 메모리의 사용이 완료되었을 때 운영체제에 반납(해제)합니다. 메모리 부족(누수) 현상을 방지하기 위해 반드시 필요합니다.
+
+동적 메모리는 프로그램 실행 중에 필요한 만큼 메모리를 할당받아 사용하는 방식으로, **힙(Heap) 영역**에 저장됩니다. 프로그램이 종료되기 전까지 직접 메모리를 해제(`free()`)해야 하며, 그렇지 않으면 **메모리 누수(Memory Leak)**가 발생합니다.
+
+---
+
+### `malloc(size)`
+
+지정한 `size` 바이트만큼 메모리를 할당하고 시작 주소를 `void *` 형태로 반환합니다.
+
+* 메모리의 **초기값은 쓰레기값(Garbage Value)** 입니다.
+* 할당에 실패하면 `NULL`을 반환합니다.
+
+#### 함수 원형
+
+```c
+void *malloc(size_t size);
+```
+
+#### 사용 예시
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int *arr;
+
+    arr = (int *)malloc(5 * sizeof(int));
+
+    if (arr == NULL) {
+        printf("메모리 할당 실패\n");
+        return 1;
+    }
+
+    for (int i = 0; i < 5; i++) {
+        arr[i] = (i + 1) * 10;
+    }
+
+    for (int i = 0; i < 5; i++) {
+        printf("%d ", arr[i]);
+    }
+
+    free(arr);
+
+    return 0;
+}
+```
+
+**실행 결과**
+
+```
+10 20 30 40 50
+```
+
+---
+
+### `calloc(num, size)`
+
+`size` 크기의 데이터를 `num`개 저장할 수 있는 메모리를 할당합니다.
+
+* 모든 메모리가 **0으로 초기화**됩니다.
+* 배열을 만들 때 자주 사용됩니다.
+
+#### 함수 원형
+
+```c
+void *calloc(size_t num, size_t size);
+```
+
+#### 사용 예시
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int *arr;
+
+    arr = (int *)calloc(5, sizeof(int));
+
+    if (arr == NULL) {
+        printf("메모리 할당 실패\n");
+        return 1;
+    }
+
+    for (int i = 0; i < 5; i++) {
+        printf("%d ", arr[i]);
+    }
+
+    free(arr);
+
+    return 0;
+}
+```
+
+**실행 결과**
+
+```
+0 0 0 0 0
+```
+
+---
+
+### `realloc(pointer, size)`
+
+이미 할당된 메모리의 크기를 변경합니다.
+
+* 메모리를 늘리거나 줄일 수 있습니다.
+* 기존 데이터는 가능한 한 유지됩니다.
+* 실패하면 `NULL`을 반환하며, 기존 메모리는 그대로 유지됩니다.
+
+#### 함수 원형
+
+```c
+void *realloc(void *pointer, size_t size);
+```
+
+#### 사용 예시
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int *arr;
+
+    arr = (int *)malloc(3 * sizeof(int));
+
+    for (int i = 0; i < 3; i++) {
+        arr[i] = i + 1;
+    }
+
+    arr = (int *)realloc(arr, 5 * sizeof(int));
+
+    arr[3] = 4;
+    arr[4] = 5;
+
+    for (int i = 0; i < 5; i++) {
+        printf("%d ", arr[i]);
+    }
+
+    free(arr);
+
+    return 0;
+}
+```
+
+**실행 결과**
+
+```
+1 2 3 4 5
+```
+
+---
+
+### `free(ptr)`
+
+동적으로 할당받은 메모리를 운영체제에 반환합니다.
+
+* `malloc()`, `calloc()`, `realloc()`으로 할당받은 메모리는 반드시 `free()`로 해제해야 합니다.
+* 해제하지 않으면 **메모리 누수(Memory Leak)**가 발생합니다.
+
+#### 함수 원형
+
+```c
+void free(void *ptr);
+```
+
+#### 사용 예시
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int *num;
+
+    num = (int *)malloc(sizeof(int));
+
+    *num = 100;
+
+    printf("%d\n", *num);
+
+    free(num);
+    num = NULL;      // 안전하게 NULL로 초기화
+
+    return 0;
+}
+```
+
+---
+
+### `malloc()`과 `calloc()`의 차이
+
+| 항목      | `malloc()`     | `calloc()`          |
+| ------- | -------------- | ------------------- |
+| 메모리 초기화 | 하지 않음 (쓰레기값)   | 0으로 초기화             |
+| 매개변수    | `malloc(size)` | `calloc(num, size)` |
+| 사용 목적   | 일반적인 메모리 할당    | 배열 생성 시 주로 사용       |
+
+---
+
+### `realloc()` 사용 시 주의사항
+
+기존 포인터에 바로 대입하면, 메모리 재할당이 실패했을 때 기존 메모리 주소를 잃어버릴 수 있습니다.
+
+**권장 방법**
+
+```c
+int *temp;
+
+temp = realloc(arr, 10 * sizeof(int));
+
+if (temp != NULL) {
+    arr = temp;
+}
+```
+
+---
+
+### `free()` 사용 시 주의사항
+
+메모리를 해제한 후에는 **댕글링 포인터(Dangling Pointer)**를 방지하기 위해 `NULL`을 대입하는 것이 좋습니다.
+
+```c
+free(arr);
+arr = NULL;
+```
+
+---
+
+### 핵심 요약
+
+| 함수                   | 기능           | 초기화 여부            |
+| -------------------- | ------------ | ----------------- |
+| `malloc(size)`       | 메모리 할당       | ❌ 쓰레기값            |
+| `calloc(num, size)`  | 배열 형태 메모리 할당 | ✅ 0으로 초기화         |
+| `realloc(ptr, size)` | 메모리 크기 변경    | 기존 데이터 유지(가능한 경우) |
+| `free(ptr)`          | 메모리 해제       | 해당 없음             |
+
+> **시험에서 자주 나오는 포인트**
+>
+> * `malloc()`은 **초기화하지 않는다(쓰레기값)**.
+> * `calloc()`은 **0으로 초기화한다**.
+> * `realloc()`은 **메모리 크기를 변경하며 기존 데이터를 최대한 유지**한다.
+> * `free()`를 호출하지 않으면 **메모리 누수(Memory Leak)**가 발생한다.
+> * `free()` 후에는 `ptr = NULL;`을 하는 습관을 들이는 것이 좋다.
+
 
 ## 3. 수학연산 관련 함수 (`<math.h>`)
 복잡한 수학 계산을 지원하는 함수들입니다.
